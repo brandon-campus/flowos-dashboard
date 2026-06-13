@@ -295,7 +295,7 @@ function ProjectView() {
               </div>
             ) : (
               <div className="space-y-2">
-                {project.contacts.map((c) => (
+                {project.contacts.map((c: Contact) => (
                   <div key={c.name} className="flex items-center gap-3 py-1.5">
                     <div className="w-8 h-8 rounded-full bg-[#F3F4F6] grid place-items-center text-xs font-medium text-[#6B7280]">
                       {c.name[0]}
