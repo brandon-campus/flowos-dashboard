@@ -2,7 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Sparkles, RefreshCw, Plus, Trash2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
-import { getProject, type Priority } from "@/lib/mock-data";
+import { getProject, type Priority, type Note, type Contact } from "@/lib/mock-data";
 import { TaskRow } from "@/components/task-row";
 
 export const Route = createFileRoute("/projects/$projectId")({
@@ -30,7 +30,7 @@ function ProjectView() {
   const [extraTasks, setExtraTasks] = useState<{ id: string; text: string; priority: Priority }[]>([]);
   const [adding, setAdding] = useState(false);
   const [newTask, setNewTask] = useState("");
-  const [notes, setNotes] = useState(project.notes);
+  const [notes, setNotes] = useState<Note[]>(project.notes);
   const [addingNote, setAddingNote] = useState(false);
   const [newNote, setNewNote] = useState("");
 
