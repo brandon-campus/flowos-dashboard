@@ -1,9 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, FolderKanban, Inbox, Settings, Search, Hexagon, User } from "lucide-react";
+import { Home, FolderKanban, Inbox, Settings, Search, Hexagon, User, FileText, Smartphone, Target, CalendarDays } from "lucide-react";
 import { activeProjects } from "@/lib/mock-data";
 import { useQuickCapture } from "./quick-capture";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, Moon, Sun } from "lucide-react";
+import { useStore } from "@/lib/store";
 
 function NavItem({
   to,
@@ -39,6 +40,7 @@ function NavItem({
 export function AppSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { open } = useQuickCapture();
+  const { user, logout, theme, toggleTheme } = useStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const sidebar = (
@@ -66,9 +68,21 @@ export function AppSidebar() {
 
       <nav className="px-3 space-y-0.5">
         <NavItem to="/" icon={Home} label="Dashboard" exact />
+        <NavItem to="/plan" icon={CalendarDays} label="Planificar Día" />
+        <NavItem to="/goals" icon={Target} label="Metas y KPIs" />
         <NavItem to="/projects" icon={FolderKanban} label="Proyectos" />
         <NavItem to="/inbox" icon={Inbox} label="Inbox" badge={2} />
       </nav>
+
+      <div className="mt-5 px-3">
+        <div className="text-[10px] uppercase tracking-wider text-[#52525B] px-2.5 mb-1.5">
+          Contenido
+        </div>
+        <nav className="space-y-0.5">
+          <NavItem to="/social" icon={Smartphone} label="Redes Sociales" />
+          <NavItem to="/scripts" icon={FileText} label="Guiones" />
+        </nav>
+      </div>
 
       <div className="mt-5 px-3">
         <div className="text-[10px] uppercase tracking-wider text-[#52525B] px-2.5 mb-1.5">
@@ -98,11 +112,21 @@ export function AppSidebar() {
       <div className="mt-auto px-3 pb-4">
         <div className="border-t border-[#1F1F1F] my-3" />
         <NavItem to="/settings" icon={Settings} label="Configuración" />
-        <div className="mt-2 flex items-center gap-2 px-2.5 py-1.5 text-sm text-[#A1A1AA]">
-          <div className="w-6 h-6 rounded-full bg-[#27272A] grid place-items-center">
-            <User className="w-3.5 h-3.5" />
+        <div className="mt-2 flex items-center justify-between px-2.5 py-1.5 text-sm text-[#A1A1AA]">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-[#27272A] grid place-items-center shrink-0 text-xs font-medium text-white uppercase">
+              {user?.name?.[0] || <User className="w-3.5 h-3.5" />}
+            </div>
+            <span className="truncate">{user?.name}</span>
           </div>
-          <span className="truncate">Brandon Candia</span>
+          <div className="flex items-center gap-1">
+            <button onClick={toggleTheme} className="p-1 hover:text-white rounded-md hover:bg-[#18181B] transition" title="Cambiar tema">
+              {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </button>
+            <button onClick={logout} className="p-1 hover:text-white rounded-md hover:bg-[#18181B] transition" title="Cerrar sesión">
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </aside>

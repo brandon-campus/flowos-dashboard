@@ -2,17 +2,17 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Sparkles, RefreshCw, Plus, Trash2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
-import { getProject, type Priority, type Note, type Contact } from "@/lib/mock-data";
+import { useStore } from "@/lib/store";
+import type { Priority, Note, Contact } from "@/lib/mock-data";
 import { TaskRow } from "@/components/task-row";
 
 export const Route = createFileRoute("/projects/$projectId")({
   loader: ({ params }) => {
-    const project = getProject(params.projectId);
-    if (!project) throw notFound();
-    return { project };
+    // We just return the projectId, the actual data comes from the store inside the component
+    return { projectId: params.projectId };
   },
-  head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.project.name ?? "Proyecto"} — FlowOS` }],
+  head: () => ({
+    meta: [{ title: `Proyecto — FlowOS` }],
   }),
   component: ProjectView,
 });
@@ -24,31 +24,30 @@ const groupLabels: Record<Priority, string> = {
 };
 
 function ProjectView() {
-  const { project } = Route.useLoaderData();
+  const { projectId } = Route.useLoaderData();
+  const { projects, addTask, addNote, toggleTaskCompletion } = useStore();
+  const project = projects.find(p => p.id === projectId);
+  
   const [tab, setTab] = useState<"pendientes" | "completadas">("pendientes");
   const [regenerating, setRegenerating] = useState(false);
-  const [extraTasks, setExtraTasks] = useState<{ id: string; text: string; priority: Priority }[]>([]);
   const [adding, setAdding] = useState(false);
   const [newTask, setNewTask] = useState("");
-  const [notes, setNotes] = useState<Note[]>(project.notes);
   const [addingNote, setAddingNote] = useState(false);
   const [newNote, setNewNote] = useState("");
 
-  const allTasks = [...project.tasks, ...extraTasks];
-  const pending = allTasks.filter((t) => !t.completed);
-  const completed = allTasks.filter((t) => t.completed);
+  if (!project) return <div className="p-8 text-center text-gray-500">Proyecto no encontrado.</div>;
+
+  const pending = project.tasks.filter((t) => !t.completed);
+  const completed = project.tasks.filter((t) => t.completed);
 
   const regenerate = () => {
     setRegenerating(true);
     setTimeout(() => setRegenerating(false), 1500);
   };
 
-  const addTask = () => {
+  const handleAddTask = () => {
     if (newTask.trim()) {
-      setExtraTasks((arr) => [
-        ...arr,
-        { id: `new-${Date.now()}`, text: newTask.trim(), priority: "esta semana" },
-      ]);
+      addTask(project.id, newTask.trim(), "esta semana");
       toast.success("Tarea guardada");
     }
     setNewTask("");
@@ -57,7 +56,7 @@ function ProjectView() {
 
   const saveNote = () => {
     if (newNote.trim()) {
-      setNotes((n) => [{ id: `n-${Date.now()}`, ago: "ahora", text: newNote.trim() }, ...n]);
+      addNote(project.id, newNote.trim());
       toast.success("Nota guardada");
     }
     setNewNote("");
@@ -160,7 +159,7 @@ function ProjectView() {
                       <div className="text-[10px] uppercase tracking-wider text-[#9CA3AF] mb-1">
                         {groupLabels[g]}
                       </div>
-                      {ts.map((t) => <TaskRow key={t.id} text={t.text} />)}
+                      {ts.map((t) => <TaskRow key={t.id} text={t.text} initialDone={t.completed} onToggle={() => toggleTaskCompletion(project.id, t.id)} />)}
                     </div>
                   );
                 })}
@@ -176,10 +175,10 @@ function ProjectView() {
                     value={newTask}
                     onChange={(e) => setNewTask(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") addTask();
+                      if (e.key === "Enter") handleAddTask();
                       if (e.key === "Escape") { setAdding(false); setNewTask(""); }
                     }}
-                    onBlur={addTask}
+                    onBlur={handleAddTask}
                     placeholder="Nueva tarea..."
                     className="w-full px-3 py-2 text-sm border border-[#6366F1] rounded-md focus:outline-none"
                   />
@@ -258,14 +257,14 @@ function ProjectView() {
               </div>
             )}
 
-            {notes.length === 0 && !addingNote && (
+            {project.notes.length === 0 && !addingNote && (
               <div className="text-sm text-[#9CA3AF] italic py-4 text-center">
                 Sin notas todavía.
               </div>
             )}
 
             <div className="space-y-4">
-              {notes.map((n) => (
+              {project.notes.map((n) => (
                 <div key={n.id} className="text-sm">
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-[#9CA3AF] mb-1">
                     <span className="h-px flex-1 bg-[#E5E7EB]" />

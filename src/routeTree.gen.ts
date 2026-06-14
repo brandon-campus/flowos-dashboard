@@ -9,17 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SocialRouteImport } from './routes/social'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SeedRouteImport } from './routes/seed'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as PlanRouteImport } from './routes/plan'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as InboxRouteImport } from './routes/inbox'
+import { Route as GoalsRouteImport } from './routes/goals'
+import { Route as FlowRouteImport } from './routes/flow'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ScriptsIndexRouteImport } from './routes/scripts.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
+import { Route as ScriptsScriptIdRouteImport } from './routes/scripts.$scriptId'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
 
+const SocialRoute = SocialRouteImport.update({
+  id: '/social',
+  path: '/social',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeedRoute = SeedRouteImport.update({
+  id: '/seed',
+  path: '/seed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -27,9 +52,34 @@ const ProjectsRoute = ProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanRoute = PlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InboxRoute = InboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoalsRoute = GoalsRouteImport.update({
+  id: '/goals',
+  path: '/goals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlowRoute = FlowRouteImport.update({
+  id: '/flow',
+  path: '/flow',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,10 +87,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScriptsIndexRoute = ScriptsIndexRouteImport.update({
+  id: '/scripts/',
+  path: '/scripts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ProjectsRoute,
+} as any)
+const ScriptsScriptIdRoute = ScriptsScriptIdRouteImport.update({
+  id: '/scripts/$scriptId',
+  path: '/scripts/$scriptId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsNewRoute = ProjectsNewRouteImport.update({
   id: '/new',
@@ -55,74 +115,165 @@ const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/flow': typeof FlowRoute
+  '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/plan': typeof PlanRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/seed': typeof SeedRoute
   '/settings': typeof SettingsRoute
+  '/social': typeof SocialRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/scripts/$scriptId': typeof ScriptsScriptIdRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/scripts/': typeof ScriptsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/flow': typeof FlowRoute
+  '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/plan': typeof PlanRoute
+  '/register': typeof RegisterRoute
+  '/seed': typeof SeedRoute
   '/settings': typeof SettingsRoute
+  '/social': typeof SocialRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/scripts/$scriptId': typeof ScriptsScriptIdRoute
   '/projects': typeof ProjectsIndexRoute
+  '/scripts': typeof ScriptsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/flow': typeof FlowRoute
+  '/goals': typeof GoalsRoute
   '/inbox': typeof InboxRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
+  '/plan': typeof PlanRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/seed': typeof SeedRoute
   '/settings': typeof SettingsRoute
+  '/social': typeof SocialRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/scripts/$scriptId': typeof ScriptsScriptIdRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/scripts/': typeof ScriptsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/flow'
+    | '/goals'
     | '/inbox'
+    | '/login'
+    | '/onboarding'
+    | '/plan'
     | '/projects'
+    | '/register'
+    | '/seed'
     | '/settings'
+    | '/social'
     | '/projects/$projectId'
     | '/projects/new'
+    | '/scripts/$scriptId'
     | '/projects/'
+    | '/scripts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/flow'
+    | '/goals'
     | '/inbox'
+    | '/login'
+    | '/onboarding'
+    | '/plan'
+    | '/register'
+    | '/seed'
     | '/settings'
+    | '/social'
     | '/projects/$projectId'
     | '/projects/new'
+    | '/scripts/$scriptId'
     | '/projects'
+    | '/scripts'
   id:
     | '__root__'
     | '/'
+    | '/flow'
+    | '/goals'
     | '/inbox'
+    | '/login'
+    | '/onboarding'
+    | '/plan'
     | '/projects'
+    | '/register'
+    | '/seed'
     | '/settings'
+    | '/social'
     | '/projects/$projectId'
     | '/projects/new'
+    | '/scripts/$scriptId'
     | '/projects/'
+    | '/scripts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FlowRoute: typeof FlowRoute
+  GoalsRoute: typeof GoalsRoute
   InboxRoute: typeof InboxRoute
+  LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
+  PlanRoute: typeof PlanRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
+  RegisterRoute: typeof RegisterRoute
+  SeedRoute: typeof SeedRoute
   SettingsRoute: typeof SettingsRoute
+  SocialRoute: typeof SocialRoute
+  ScriptsScriptIdRoute: typeof ScriptsScriptIdRoute
+  ScriptsIndexRoute: typeof ScriptsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/social': {
+      id: '/social'
+      path: '/social'
+      fullPath: '/social'
+      preLoaderRoute: typeof SocialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seed': {
+      id: '/seed'
+      path: '/seed'
+      fullPath: '/seed'
+      preLoaderRoute: typeof SeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -132,11 +283,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plan': {
+      id: '/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof PlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inbox': {
       id: '/inbox'
       path: '/inbox'
       fullPath: '/inbox'
       preLoaderRoute: typeof InboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/goals': {
+      id: '/goals'
+      path: '/goals'
+      fullPath: '/goals'
+      preLoaderRoute: typeof GoalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flow': {
+      id: '/flow'
+      path: '/flow'
+      fullPath: '/flow'
+      preLoaderRoute: typeof FlowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -146,12 +332,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scripts/': {
+      id: '/scripts/'
+      path: '/scripts'
+      fullPath: '/scripts/'
+      preLoaderRoute: typeof ScriptsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/': {
       id: '/projects/'
       path: '/'
       fullPath: '/projects/'
       preLoaderRoute: typeof ProjectsIndexRouteImport
       parentRoute: typeof ProjectsRoute
+    }
+    '/scripts/$scriptId': {
+      id: '/scripts/$scriptId'
+      path: '/scripts/$scriptId'
+      fullPath: '/scripts/$scriptId'
+      preLoaderRoute: typeof ScriptsScriptIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/projects/new': {
       id: '/projects/new'
@@ -188,10 +388,30 @@ const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FlowRoute: FlowRoute,
+  GoalsRoute: GoalsRoute,
   InboxRoute: InboxRoute,
+  LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
+  PlanRoute: PlanRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
+  RegisterRoute: RegisterRoute,
+  SeedRoute: SeedRoute,
   SettingsRoute: SettingsRoute,
+  SocialRoute: SocialRoute,
+  ScriptsScriptIdRoute: ScriptsScriptIdRoute,
+  ScriptsIndexRoute: ScriptsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

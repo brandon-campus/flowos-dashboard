@@ -1,11 +1,11 @@
 export type Area = "trabajo" | "cliente" | "personal" | "comunidad";
 export type Status = "activo" | "pausado" | "cerrado";
-export type Priority = "hoy" | "esta semana" | "algún día";
+export type Priority = "hoy" | "mañana" | "esta_semana" | "esta semana" | "algún día";
 
 export interface Task {
   id: string;
   text: string;
-  priority: Priority;
+  priority?: Priority;
   completed?: boolean;
   completedAgo?: string;
 }

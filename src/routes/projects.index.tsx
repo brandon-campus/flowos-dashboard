@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { projects } from "@/lib/mock-data";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/projects/")({
   head: () => ({ meta: [{ title: "Proyectos — FlowOS" }] }),
@@ -11,6 +11,7 @@ export const Route = createFileRoute("/projects/")({
 const filters = ["Todos", "Activos", "Pausados", "Cerrados"] as const;
 
 function ProjectsList() {
+  const { projects } = useStore();
   const [filter, setFilter] = useState<(typeof filters)[number]>("Todos");
 
   const list = projects.filter((p) => {

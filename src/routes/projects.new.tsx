@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useStore } from "@/lib/store";
+import type { Area, Status } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/projects/new")({
   head: () => ({ meta: [{ title: "Nuevo proyecto — FlowOS" }] }),
@@ -12,9 +14,35 @@ const colors = ["#6366F1", "#10B981", "#F59E0B", "#8B5CF6", "#EF4444", "#06B6D4"
 
 function NewProject() {
   const navigate = useNavigate();
+  const { addProject } = useStore();
   const [name, setName] = useState("");
-  const [area, setArea] = useState<(typeof areas)[number]>("Trabajo");
+  const [area, setArea] = useState<Area>("trabajo");
   const [color, setColor] = useState(colors[0]);
+  const [status, setStatus] = useState<Status>("activo");
+  const [description, setDescription] = useState("");
+
+  const handleCreate = () => {
+    if (!name.trim()) {
+      toast.error("El nombre es requerido");
+      return;
+    }
+    
+    addProject({
+      name: name.trim(),
+      area,
+      color,
+      status,
+      lastActivity: "recién",
+      summary: description || "Proyecto recién creado. Aún no hay suficiente contexto para un resumen.",
+      summaryAgo: "recién",
+      tasks: [],
+      notes: [],
+      contacts: [],
+    });
+
+    toast.success("Proyecto creado");
+    navigate({ to: "/projects" });
+  };
 
   return (
     <div className="max-w-xl mx-auto px-6 py-10">
@@ -39,9 +67,9 @@ function NewProject() {
             {areas.map((a) => (
               <button
                 key={a}
-                onClick={() => setArea(a)}
-                className={`px-3 py-1.5 text-xs rounded ${
-                  area === a ? "bg-white shadow-sm text-[#111827]" : "text-[#6B7280]"
+                onClick={() => setArea(a.toLowerCase() as Area)}
+                className={`px-3 py-1.5 text-xs rounded capitalize ${
+                  area === a.toLowerCase() ? "bg-white shadow-sm text-[#111827]" : "text-[#6B7280]"
                 }`}
               >
                 {a}
@@ -68,10 +96,14 @@ function NewProject() {
 
         <div>
           <label className="block text-xs font-medium text-[#374151] mb-1.5">Estado</label>
-          <select className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-md bg-white">
-            <option>Activo</option>
-            <option>Pausado</option>
-            <option>Cerrado</option>
+          <select 
+            value={status}
+            onChange={(e) => setStatus(e.target.value as Status)}
+            className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-md bg-white capitalize"
+          >
+            <option value="activo">Activo</option>
+            <option value="pausado">Pausado</option>
+            <option value="cerrado">Cerrado</option>
           </select>
         </div>
 
@@ -81,6 +113,8 @@ function NewProject() {
           </label>
           <textarea
             rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-md focus:outline-none focus:border-[#6366F1] resize-none"
           />
         </div>
@@ -93,10 +127,7 @@ function NewProject() {
             Cancelar
           </button>
           <button
-            onClick={() => {
-              toast.success("Proyecto creado");
-              navigate({ to: "/projects" });
-            }}
+            onClick={handleCreate}
             className="px-3 py-1.5 text-sm rounded-md bg-[#6366F1] text-white hover:bg-[#4F46E5]"
           >
             Crear proyecto →

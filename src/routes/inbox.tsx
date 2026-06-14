@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trash2, Inbox as InboxIcon, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { inboxTasks, activeProjects } from "@/lib/mock-data";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/inbox")({
   head: () => ({ meta: [{ title: "Inbox — FlowOS" }] }),
@@ -10,11 +10,23 @@ export const Route = createFileRoute("/inbox")({
 });
 
 function Inbox() {
-  const [tasks, setTasks] = useState(inboxTasks);
+  const { projects, inboxTasks, addTaskToInbox, assignInboxTaskToProject, deleteInboxTask } = useStore();
+  const activeProjects = projects.filter((p) => p.status === "activo");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [newTask, setNewTask] = useState("");
 
-  const assign = (taskId: string, projectName: string) => {
-    setTasks((t) => t.filter((x) => x.id !== taskId));
+  const handleAddTask = () => {
+    if (newTask.trim()) {
+      addTaskToInbox(newTask.trim());
+      toast.success("Tarea agregada al Inbox");
+    }
+    setNewTask("");
+    setAdding(false);
+  };
+
+  const assign = (taskId: string, projectId: string, projectName: string) => {
+    assignInboxTaskToProject(taskId, projectId);
     setOpenMenu(null);
     toast.success(`Tarea asignada a ${projectName}`);
   };
@@ -24,11 +36,29 @@ function Inbox() {
       <h1 className="text-2xl font-semibold mb-1">Inbox</h1>
       <p className="text-sm text-[#6B7280] mb-6">Tareas sin clasificar</p>
 
-      <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-[#E5E7EB] bg-white rounded-md hover:border-[#6366F1] mb-4">
-        <Plus className="w-3.5 h-3.5" /> Agregar tarea
-      </button>
+      {adding ? (
+        <input
+          autoFocus
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleAddTask();
+            if (e.key === "Escape") { setAdding(false); setNewTask(""); }
+          }}
+          onBlur={handleAddTask}
+          placeholder="Escribí una tarea y presioná Enter..."
+          className="w-full max-w-sm px-3 py-2 text-sm border border-[#6366F1] rounded-md focus:outline-none mb-4"
+        />
+      ) : (
+        <button 
+          onClick={() => setAdding(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-[#E5E7EB] bg-white rounded-md hover:border-[#6366F1] mb-4 text-[#111827]"
+        >
+          <Plus className="w-3.5 h-3.5" /> Agregar tarea
+        </button>
+      )}
 
-      {tasks.length === 0 ? (
+      {inboxTasks.length === 0 ? (
         <div className="bg-white border border-[#E5E7EB] rounded-lg py-16 text-center">
           <InboxIcon className="w-10 h-10 mx-auto text-[#D1D5DB] mb-3" />
           <div className="text-base font-medium text-[#111827]">Inbox vacío</div>
@@ -38,7 +68,7 @@ function Inbox() {
         </div>
       ) : (
         <div className="bg-white border border-[#E5E7EB] rounded-lg divide-y divide-[#E5E7EB]">
-          {tasks.map((t) => (
+          {inboxTasks.map((t) => (
             <div
               key={t.id}
               className="flex items-center gap-3 px-4 py-3 transition animate-in fade-in"
@@ -57,7 +87,7 @@ function Inbox() {
                     {activeProjects.map((p) => (
                       <button
                         key={p.id}
-                        onClick={() => assign(t.id, p.name)}
+                        onClick={() => assign(t.id, p.id, p.name)}
                         className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-[#F3F4F6] text-left"
                       >
                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
@@ -67,7 +97,7 @@ function Inbox() {
                   </div>
                 )}
               </div>
-              <button className="text-[#9CA3AF] hover:text-[#EF4444]">
+              <button onClick={() => deleteInboxTask(t.id)} className="text-[#9CA3AF] hover:text-[#EF4444]">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>

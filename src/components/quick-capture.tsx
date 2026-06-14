@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { toast } from "sonner";
-import { activeProjects } from "@/lib/mock-data";
+import { useStore } from "@/lib/store";
+import type { Priority } from "@/lib/mock-data";
 
 type Ctx = { open: () => void; close: () => void };
 const QuickCaptureCtx = createContext<Ctx>({ open: () => {}, close: () => {} });
@@ -11,17 +12,46 @@ export const useQuickCapture = () => useContext(QuickCaptureCtx);
 export function QuickCaptureProvider({ children }: { children: ReactNode }) {
   const [isOpen, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const [projectId, setProjectId] = useState(activeProjects[0].id);
-  const [priority, setPriority] = useState<"Hoy" | "Esta semana" | "Algún día">("Hoy");
+  const { projects, addTask } = useStore();
+  const activeProjects = projects.filter((p) => p.status === "activo");
+  
+  const [projectId, setProjectId] = useState<string>("inbox");
+  const [priority, setPriority] = useState<Priority>("hoy");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && activeProjects.length > 0 && projectId === "inbox") {
+      setProjectId(activeProjects[0].id);
+    }
+  }, [isOpen, activeProjects]);
 
   const close = () => {
     setOpen(false);
     setText("");
+    setProjectId("inbox");
   };
 
   const save = () => {
-    const proj = activeProjects.find((p) => p.id === projectId);
-    toast.success(`Tarea guardada en ${proj?.name ?? "proyecto"}`);
+    if (!text.trim()) return;
+    
+    if (projectId === "inbox") {
+      addTask(null, text, priority);
+      toast.success("Tarea enviada a Inbox");
+    } else {
+      addTask(projectId, text, priority);
+      const proj = projects.find((p) => p.id === projectId);
+      toast.success(`Tarea guardada en ${proj?.name ?? "proyecto"}`);
+    }
     close();
   };
 
@@ -61,6 +91,7 @@ export function QuickCaptureProvider({ children }: { children: ReactNode }) {
                   onChange={(e) => setProjectId(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-md bg-white"
                 >
+                  <option value="inbox">Inbox (Sin proyecto)</option>
                   {activeProjects.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -69,11 +100,11 @@ export function QuickCaptureProvider({ children }: { children: ReactNode }) {
               <div>
                 <div className="text-xs text-[#6B7280] mb-1.5">Prioridad:</div>
                 <div className="flex gap-2">
-                  {(["Hoy", "Esta semana", "Algún día"] as const).map((p) => (
+                  {(["hoy", "esta semana", "algún día"] as const).map((p) => (
                     <button
                       key={p}
                       onClick={() => setPriority(p)}
-                      className={`px-3 py-1.5 text-xs rounded-md border transition ${
+                      className={`px-3 py-1.5 text-xs rounded-md border transition capitalize ${
                         priority === p
                           ? "bg-[#6366F1] text-white border-[#6366F1]"
                           : "bg-white text-[#111827] border-[#E5E7EB] hover:border-[#6366F1]"
