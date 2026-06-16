@@ -3,7 +3,7 @@ import { Home, FolderKanban, Inbox, Settings, Search, Hexagon, User, FileText, S
 import { activeProjects } from "@/lib/mock-data";
 import { useQuickCapture } from "./quick-capture";
 import { useState } from "react";
-import { Menu, X, LogOut, Moon, Sun } from "lucide-react";
+import { Menu, X, LogOut, Moon, Sun, Plus } from "lucide-react";
 import { useStore } from "@/lib/store";
 
 function NavItem({
@@ -135,15 +135,39 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* Mobile header */}
-      <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 bg-[#0F0F0F] border-b border-[#1F1F1F]">
+      {/* Mobile header (Title only) */}
+      <div className="md:hidden sticky top-0 z-30 flex items-center justify-center px-4 py-3 bg-[#0F0F0F] border-b border-[#1F1F1F]">
         <div className="flex items-center gap-2 text-white font-semibold text-sm">
           <Hexagon className="w-4 h-4 text-[#6366F1]" />
           FlowOS
         </div>
-        <button onClick={() => setMobileOpen(true)} className="text-white">
-          <Menu className="w-5 h-5" />
-        </button>
+      </div>
+
+      {/* Mobile Bottom Nav */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-[#0F0F0F] border-t border-[#E5E7EB] dark:border-[#1F1F1F] pb-safe">
+        <div className="flex items-center justify-around h-16 px-2">
+          <Link to="/" className={`flex flex-col items-center justify-center w-full gap-1 ${pathname === '/' ? 'text-[#6366F1]' : 'text-[#6B7280] dark:text-[#A1A1AA]'}`}>
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Inicio</span>
+          </Link>
+          <Link to="/plan" className={`flex flex-col items-center justify-center w-full gap-1 ${pathname === '/plan' ? 'text-[#6366F1]' : 'text-[#6B7280] dark:text-[#A1A1AA]'}`}>
+            <Sun className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Mi Día</span>
+          </Link>
+          <div className="relative -top-5">
+            <button onClick={open} className="flex items-center justify-center w-14 h-14 bg-[#6366F1] text-white rounded-full shadow-lg shadow-[#6366F1]/30 border-4 border-[#FAFAFA] dark:border-[#000000] hover:scale-105 transition-transform" aria-label="Nueva Tarea">
+              <Plus className="w-7 h-7" />
+            </button>
+          </div>
+          <Link to="/scripts" className={`flex flex-col items-center justify-center w-full gap-1 ${pathname === '/scripts' || pathname.startsWith('/scripts/') ? 'text-[#6366F1]' : 'text-[#6B7280] dark:text-[#A1A1AA]'}`}>
+            <FileText className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Guiones</span>
+          </Link>
+          <button onClick={() => setMobileOpen(true)} className="flex flex-col items-center justify-center w-full gap-1 text-[#6B7280] dark:text-[#A1A1AA]">
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Más</span>
+          </button>
+        </div>
       </div>
 
       {/* Desktop sidebar */}

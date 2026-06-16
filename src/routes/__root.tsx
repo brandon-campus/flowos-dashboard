@@ -147,7 +147,7 @@ function AppLayout() {
     <QuickCaptureProvider>
       <div className="flex flex-col md:flex-row h-screen bg-[#FAFAFA] dark:bg-[#000000] text-[#1A1A1A] dark:text-[#F9FAFB] font-sans overflow-hidden">
         {!isFlowMode && !isOnboarding && <AppSidebar />}
-        <main className="flex-1 overflow-y-auto w-full md:w-auto">
+        <main className="flex-1 overflow-y-auto w-full md:w-auto pb-20 md:pb-0">
           <Outlet />
         </main>
       </div>
