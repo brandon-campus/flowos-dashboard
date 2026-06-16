@@ -135,14 +135,6 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* Mobile header (Title only) */}
-      <div className="md:hidden sticky top-0 z-30 flex items-center justify-center px-4 py-3 bg-[#0F0F0F] border-b border-[#1F1F1F]">
-        <div className="flex items-center gap-2 text-white font-semibold text-sm">
-          <Hexagon className="w-4 h-4 text-[#6366F1]" />
-          FlowOS
-        </div>
-      </div>
-
       {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-[#0F0F0F] border-t border-[#E5E7EB] dark:border-[#1F1F1F] pb-safe">
         <div className="flex items-center justify-around h-16 px-2">

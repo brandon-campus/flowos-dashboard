@@ -60,36 +60,36 @@ export function QuickCaptureProvider({ children }: { children: ReactNode }) {
       {children}
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-32 px-4"
+          className="fixed inset-0 z-50 flex items-end md:items-start justify-center bg-black/40 md:pt-32 md:px-4 animate-in fade-in duration-200"
           onClick={close}
         >
           <div
-            className="w-full max-w-lg rounded-xl bg-white shadow-2xl border border-[#E5E7EB] overflow-hidden"
+            className="w-full md:max-w-lg rounded-t-2xl md:rounded-xl bg-white dark:bg-[#09090B] shadow-2xl border-t md:border border-[#E5E7EB] dark:border-[#27272A] overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-top-4 md:fade-in duration-300 flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#E5E7EB]">
-              <div className="flex items-center gap-2 text-sm text-[#111827]">
-                <kbd className="px-1.5 py-0.5 text-[11px] rounded bg-[#F3F4F6] border border-[#E5E7EB]">⌘K</kbd>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#E5E7EB] dark:border-[#27272A] shrink-0">
+              <div className="flex items-center gap-2 text-sm text-[#111827] dark:text-[#F9FAFB]">
+                <kbd className="px-1.5 py-0.5 text-[11px] rounded bg-[#F3F4F6] dark:bg-[#18181B] border border-[#E5E7EB] dark:border-[#27272A] text-[#6B7280] dark:text-[#A1A1AA]">⌘K</kbd>
                 <span className="font-medium">Captura rápida</span>
               </div>
-              <button onClick={close} className="text-[#6B7280] hover:text-[#111827]">
-                <X className="w-4 h-4" />
+              <button onClick={close} className="text-[#6B7280] dark:text-[#A1A1AA] hover:text-[#111827] dark:hover:text-white p-2 -mr-2">
+                <X className="w-5 h-5 md:w-4 md:h-4" />
               </button>
             </div>
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 overflow-y-auto">
               <input
                 autoFocus
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Escribí una tarea o nota..."
-                className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-md focus:outline-none focus:border-[#6366F1]"
+                className="w-full px-3 py-2 text-base md:text-sm bg-transparent text-[#111827] dark:text-[#F9FAFB] border border-[#E5E7EB] dark:border-[#27272A] rounded-md focus:outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1] placeholder:text-[#9CA3AF] dark:placeholder:text-[#52525B]"
               />
               <div>
-                <div className="text-xs text-[#6B7280] mb-1.5">Asignar a proyecto:</div>
+                <div className="text-xs text-[#6B7280] dark:text-[#A1A1AA] mb-1.5">Asignar a proyecto:</div>
                 <select
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-md bg-white"
+                  className="w-full px-3 py-2 text-base md:text-sm bg-white dark:bg-[#09090B] text-[#111827] dark:text-[#F9FAFB] border border-[#E5E7EB] dark:border-[#27272A] rounded-md focus:outline-none focus:border-[#6366F1]"
                 >
                   <option value="inbox">Inbox (Sin proyecto)</option>
                   {activeProjects.map((p) => (
@@ -98,8 +98,8 @@ export function QuickCaptureProvider({ children }: { children: ReactNode }) {
                 </select>
               </div>
               <div>
-                <div className="text-xs text-[#6B7280] mb-1.5">Prioridad:</div>
-                <div className="flex gap-2">
+                <div className="text-xs text-[#6B7280] dark:text-[#A1A1AA] mb-1.5">Prioridad:</div>
+                <div className="flex gap-2 flex-wrap">
                   {(["hoy", "esta semana", "algún día"] as const).map((p) => (
                     <button
                       key={p}
@@ -107,7 +107,7 @@ export function QuickCaptureProvider({ children }: { children: ReactNode }) {
                       className={`px-3 py-1.5 text-xs rounded-md border transition capitalize ${
                         priority === p
                           ? "bg-[#6366F1] text-white border-[#6366F1]"
-                          : "bg-white text-[#111827] border-[#E5E7EB] hover:border-[#6366F1]"
+                          : "bg-white dark:bg-[#09090B] text-[#111827] dark:text-[#F9FAFB] border-[#E5E7EB] dark:border-[#27272A] hover:border-[#6366F1]"
                       }`}
                     >
                       {p}
@@ -116,16 +116,16 @@ export function QuickCaptureProvider({ children }: { children: ReactNode }) {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-2 px-4 py-3 border-t border-[#E5E7EB] bg-[#FAFAFA]">
+            <div className="flex justify-end gap-2 px-4 py-3 border-t border-[#E5E7EB] dark:border-[#27272A] bg-[#FAFAFA] dark:bg-[#0F0F0F] shrink-0 pb-safe">
               <button
                 onClick={close}
-                className="px-3 py-1.5 text-sm rounded-md text-[#111827] hover:bg-[#F3F4F6]"
+                className="px-3 py-1.5 text-sm rounded-md text-[#111827] dark:text-[#F9FAFB] hover:bg-[#F3F4F6] dark:hover:bg-[#18181B] transition"
               >
                 Cancelar
               </button>
               <button
                 onClick={save}
-                className="px-3 py-1.5 text-sm rounded-md bg-[#6366F1] text-white hover:bg-[#4F46E5]"
+                className="px-3 py-1.5 text-sm rounded-md bg-[#6366F1] text-white hover:bg-[#4F46E5] transition"
               >
                 Guardar →
               </button>

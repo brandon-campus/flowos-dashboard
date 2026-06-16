@@ -24,7 +24,7 @@ export function TaskRow({ text, initialDone = false, onToggle }: { text: string;
       <span className={`flex-1 text-sm ${done ? "line-through text-[#9CA3AF] dark:text-[#A1A1AA]" : "text-[#111827] dark:text-[#F9FAFB]"}`}>
         {text}
       </span>
-      <button className="opacity-0 group-hover:opacity-100 text-[#9CA3AF] dark:text-[#A1A1AA] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition">
+      <button className="md:opacity-0 opacity-100 group-hover:opacity-100 p-2 -mr-2 text-[#9CA3AF] dark:text-[#A1A1AA] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition">
         <MoreHorizontal className="w-4 h-4" />
       </button>
     </div>

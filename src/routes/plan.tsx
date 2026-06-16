@@ -12,6 +12,7 @@ export const Route = createFileRoute("/plan")({
 function DailyPlanner() {
   const navigate = useNavigate();
   const [showFlowModal, setShowFlowModal] = useState<string | null>(null); // store the hour being focused
+  const [taskToSchedule, setTaskToSchedule] = useState<{ id: string, type: "inbox" | "project", projectId?: string, text: string } | null>(null);
   const [customTime, setCustomTime] = useState("");
 
   const { 
@@ -95,6 +96,24 @@ function DailyPlanner() {
     }
   };
 
+  const handleScheduleTask = (hour: string | null) => {
+    if (!taskToSchedule) return;
+
+    if (hour) {
+      const currentBlockText = timeBlocks[hour] || "";
+      const separator = currentBlockText.trim() === "" ? "" : "\n";
+      updateTimeBlock(hour, currentBlockText + separator + "- " + taskToSchedule.text);
+    }
+    
+    if (taskToSchedule.type === "inbox") {
+      setInboxTaskPriority(taskToSchedule.id, "hoy");
+    } else if (taskToSchedule.type === "project" && taskToSchedule.projectId) {
+      setProjectTaskPriority(taskToSchedule.projectId, taskToSchedule.id, "hoy");
+    }
+    
+    setTaskToSchedule(null);
+  };
+
   return (
     <div className="md:h-[calc(100vh-2rem)] flex flex-col px-4 md:px-6 py-6 md:py-8 max-w-7xl mx-auto md:overflow-hidden">
       {/* FLOW MODAL */}
@@ -103,7 +122,7 @@ function DailyPlanner() {
           <div className="bg-white dark:bg-[#09090B] rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200 border dark:border-[#27272A]">
             <div className="p-5 border-b border-[#E5E7EB] dark:border-[#27272A] flex items-center justify-between">
               <h3 className="font-semibold text-[#111827] dark:text-[#F9FAFB]">Entrar en Flow</h3>
-              <button onClick={() => setShowFlowModal(null)} className="text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition">
+              <button onClick={() => setShowFlowModal(null)} className="text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition p-2">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -126,7 +145,7 @@ function DailyPlanner() {
                   placeholder="Otro..." 
                   value={customTime}
                   onChange={e => setCustomTime(e.target.value)}
-                  className="flex-1 bg-white dark:bg-[#09090B] text-[#111827] dark:text-[#F9FAFB] border border-[#E5E7EB] dark:border-[#27272A] rounded-xl px-4 py-2 text-sm outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1]"
+                  className="flex-1 bg-white dark:bg-[#09090B] text-base md:text-sm text-[#111827] dark:text-[#F9FAFB] border border-[#E5E7EB] dark:border-[#27272A] rounded-xl px-4 py-2 outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1]"
                 />
                 <button 
                   onClick={() => customTime && handleStartFlow(parseInt(customTime))}
@@ -134,6 +153,46 @@ function DailyPlanner() {
                 >
                   Iniciar
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SCHEDULE MODAL (BOTTOM SHEET ON MOBILE) */}
+      {taskToSchedule && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 md:p-4 animate-in fade-in duration-200" onClick={() => setTaskToSchedule(null)}>
+          <div 
+            className="bg-white dark:bg-[#09090B] w-full md:max-w-sm rounded-t-2xl md:rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-full md:slide-in-from-bottom-4 duration-300 border-t md:border dark:border-[#27272A] max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-[#E5E7EB] dark:border-[#27272A] flex items-center justify-between shrink-0">
+              <h3 className="font-semibold text-[#111827] dark:text-[#F9FAFB] line-clamp-1 mr-4">Agendar: {taskToSchedule.text}</h3>
+              <button onClick={() => setTaskToSchedule(null)} className="text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition p-2">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-2 pb-safe">
+              <button
+                onClick={() => handleScheduleTask(null)}
+                className="w-full text-left px-4 py-3 text-sm font-medium text-[#F59E0B] hover:bg-[#FEF3C7] dark:hover:bg-[#451A03] rounded-xl transition flex items-center gap-2 mb-2"
+              >
+                <Sun className="w-4 h-4" /> Sin horario específico (Suelta)
+              </button>
+              
+              <div className="text-xs font-semibold text-[#6B7280] dark:text-[#A1A1AA] uppercase tracking-wider px-4 py-2">
+                Elegir Horario
+              </div>
+              <div className="grid grid-cols-2 gap-2 px-2 pb-4">
+                {hours.map((hour) => (
+                  <button
+                    key={hour}
+                    onClick={() => handleScheduleTask(hour)}
+                    className="text-center px-4 py-3 text-sm font-medium text-[#374151] dark:text-[#D1D5DB] bg-[#F9FAFB] dark:bg-[#18181B] hover:bg-[#EEF2FF] hover:text-[#6366F1] dark:hover:bg-[#1E1B4B] border border-[#E5E7EB] dark:border-[#27272A] hover:border-[#6366F1] rounded-xl transition"
+                  >
+                    {hour}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -174,8 +233,8 @@ function DailyPlanner() {
                     >
                       <span className="text-sm text-[#374151] dark:text-[#D1D5DB] select-none">{task.text}</span>
                       <button 
-                        onClick={() => toggleInboxTaskPriority(task.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-[#9CA3AF] hover:text-[#6366F1] bg-[#F3F4F6] dark:bg-[#27272A] hover:bg-[#EEF2FF] dark:hover:bg-[#1E1B4B] rounded transition"
+                        onClick={() => setTaskToSchedule({ id: task.id, type: "inbox", text: task.text })}
+                        className="md:opacity-0 opacity-100 group-hover:opacity-100 p-2 text-[#9CA3AF] hover:text-[#6366F1] bg-[#F3F4F6] dark:bg-[#27272A] hover:bg-[#EEF2FF] dark:hover:bg-[#1E1B4B] rounded-lg transition shrink-0"
                         title="Añadir como suelta"
                       >
                         <Plus className="w-4 h-4" />
@@ -203,8 +262,8 @@ function DailyPlanner() {
                     >
                       <span className="text-sm text-[#374151] dark:text-[#D1D5DB] select-none">{task.text}</span>
                       <button 
-                        onClick={() => toggleProjectTaskPriority(project.id, task.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-[#9CA3AF] hover:text-[#6366F1] bg-[#F3F4F6] dark:bg-[#27272A] hover:bg-[#EEF2FF] dark:hover:bg-[#1E1B4B] rounded transition"
+                        onClick={() => setTaskToSchedule({ id: task.id, type: "project", projectId: project.id, text: task.text })}
+                        className="md:opacity-0 opacity-100 group-hover:opacity-100 p-2 text-[#9CA3AF] hover:text-[#6366F1] bg-[#F3F4F6] dark:bg-[#27272A] hover:bg-[#EEF2FF] dark:hover:bg-[#1E1B4B] rounded-lg transition shrink-0"
                         title="Añadir como suelta"
                       >
                         <Plus className="w-4 h-4" />
@@ -250,7 +309,7 @@ function DailyPlanner() {
                       <span className="text-xs font-medium text-[#111827] dark:text-[#F9FAFB]">{task.text}</span>
                       <button 
                         onClick={() => toggleInboxTaskPriority(task.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-[#9CA3AF] hover:text-[#EF4444] rounded transition"
+                        className="md:opacity-0 opacity-100 group-hover:opacity-100 p-2 text-[#9CA3AF] hover:text-[#EF4444] rounded-lg transition shrink-0"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
@@ -271,7 +330,7 @@ function DailyPlanner() {
                         </div>
                         <button 
                           onClick={() => toggleProjectTaskPriority(project.id, task.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-[#9CA3AF] hover:text-[#EF4444] rounded transition"
+                          className="md:opacity-0 opacity-100 group-hover:opacity-100 p-2 text-[#9CA3AF] hover:text-[#EF4444] rounded-lg transition shrink-0"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
@@ -317,7 +376,7 @@ function DailyPlanner() {
                     {timeBlocks[hour] && timeBlocks[hour].trim() !== "" && (
                       <button 
                         onClick={() => setShowFlowModal(hour)}
-                        className="absolute right-3 top-3 p-1.5 bg-[#EEF2FF] dark:bg-[#1E1B4B] text-[#6366F1] rounded-md opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-[#6366F1] hover:text-white dark:hover:bg-[#6366F1]"
+                        className="absolute right-3 top-3 p-2 bg-[#EEF2FF] dark:bg-[#1E1B4B] text-[#6366F1] rounded-lg md:opacity-0 opacity-100 group-hover:opacity-100 transition shadow-sm hover:bg-[#6366F1] hover:text-white dark:hover:bg-[#6366F1]"
                         title="Entrar en Flow"
                       >
                         <Play className="w-4 h-4 fill-current" />
