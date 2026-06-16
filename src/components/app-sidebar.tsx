@@ -1,6 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, FolderKanban, Inbox, Settings, Search, Hexagon, User, FileText, Smartphone, Target, CalendarDays, Mail } from "lucide-react";
-import { activeProjects } from "@/lib/mock-data";
 import { useQuickCapture } from "./quick-capture";
 import { useState } from "react";
 import { Menu, X, LogOut, Moon, Sun, Plus } from "lucide-react";
@@ -40,8 +39,10 @@ function NavItem({
 export function AppSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { open } = useQuickCapture();
-  const { user, logout, theme, toggleTheme } = useStore();
+  const { user, logout, theme, toggleTheme, projects } = useStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  
+  const activeUserProjects = projects.filter(p => p.status === "activo");
 
   const sidebar = (
     <aside className="w-[240px] bg-[#0F0F0F] border-r border-[#1F1F1F] flex flex-col h-screen sticky top-0 shrink-0">
@@ -90,23 +91,27 @@ export function AppSidebar() {
           Proyectos activos
         </div>
         <div className="space-y-0.5">
-          {activeProjects.map((p) => {
-            const to = `/projects/${p.id}`;
-            const active = pathname === to;
-            return (
-              <Link
-                key={p.id}
-                to="/projects/$projectId"
-                params={{ projectId: p.id }}
-                className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition ${
-                  active ? "bg-[#1C1C1E] text-white" : "text-[#A1A1AA] hover:text-white hover:bg-[#18181B]"
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-                <span className="truncate">{p.name}</span>
-              </Link>
-            );
-          })}
+          {activeUserProjects.length === 0 ? (
+            <div className="px-2.5 py-1.5 text-xs text-[#A1A1AA]">No hay proyectos activos</div>
+          ) : (
+            activeUserProjects.map((p) => {
+              const to = `/projects/${p.id}`;
+              const active = pathname === to;
+              return (
+                <Link
+                  key={p.id}
+                  to="/projects/$projectId"
+                  params={{ projectId: p.id }}
+                  className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition ${
+                    active ? "bg-[#1C1C1E] text-white" : "text-[#A1A1AA] hover:text-white hover:bg-[#18181B]"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+                  <span className="truncate">{p.name}</span>
+                </Link>
+              );
+            })
+          )}
         </div>
       </div>
 
