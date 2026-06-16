@@ -96,7 +96,7 @@ function DailyPlanner() {
   };
 
   return (
-    <div className="h-[calc(100vh-2rem)] flex flex-col px-6 py-8 max-w-7xl mx-auto overflow-hidden">
+    <div className="md:h-[calc(100vh-2rem)] flex flex-col px-4 md:px-6 py-6 md:py-8 max-w-7xl mx-auto md:overflow-hidden">
       {/* FLOW MODAL */}
       {showFlowModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -150,7 +150,7 @@ function DailyPlanner() {
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 min-h-0">
         
         {/* Left Column: BACKLOG */}
-        <div className="flex flex-col bg-[#F9FAFB] dark:bg-[#18181B] border border-[#E5E7EB] dark:border-[#27272A] rounded-2xl overflow-hidden shadow-sm">
+        <div className="flex flex-col bg-[#F9FAFB] dark:bg-[#18181B] border border-[#E5E7EB] dark:border-[#27272A] rounded-2xl overflow-hidden shadow-sm h-[50vh] md:h-auto">
           <div className="p-4 border-b border-[#E5E7EB] dark:border-[#27272A] bg-white dark:bg-[#09090B] flex items-center justify-between shrink-0">
             <h2 className="text-sm font-semibold text-[#111827] dark:text-[#F9FAFB]">Backlog</h2>
             <span className="text-xs text-[#6B7280] dark:text-[#A1A1AA]">Arrastrá tareas a tus horarios 👉</span>
@@ -224,7 +224,7 @@ function DailyPlanner() {
         </div>
 
         {/* Right Column: MI DÍA (Bloc de notas / Cronograma) */}
-        <div className="flex flex-col bg-white dark:bg-[#09090B] border border-[#E5E7EB] dark:border-[#27272A] rounded-2xl overflow-hidden shadow-md relative">
+        <div className="flex flex-col bg-white dark:bg-[#09090B] border border-[#E5E7EB] dark:border-[#27272A] rounded-2xl overflow-hidden shadow-md relative h-[80vh] md:h-auto">
           <div className="p-4 border-b border-[#E5E7EB] dark:border-[#27272A] bg-gradient-to-r from-[#FEF3C7] to-white dark:from-[#201A09] dark:to-[#09090B] flex items-center justify-between shrink-0 z-10">
             <h2 className="text-sm font-semibold text-[#F59E0B] flex items-center gap-2">
               <Sun className="w-4 h-4" /> Mi Día
