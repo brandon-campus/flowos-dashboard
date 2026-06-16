@@ -25,24 +25,27 @@ function GoalsModule() {
   const [newTarget, setNewTarget] = useState("");
   const [newAccountId, setNewAccountId] = useState("");
   const [newProjectId, setNewProjectId] = useState("");
+  const [newDeadline, setNewDeadline] = useState("");
 
   const filteredGoals = goals.filter((g) => g.period === activeTab);
 
   const handleAddGoal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newTarget || isNaN(Number(newTarget))) return;
+    if (!newTitle.trim() || !newTarget || isNaN(Number(newTarget)) || !newDeadline) return;
     
     addGoal({
       title: newTitle.trim(),
       current: 0,
       target: Number(newTarget),
       period: activeTab,
+      deadline: newDeadline,
       accountId: newAccountId || undefined,
       projectId: newProjectId || undefined,
     });
     
     setNewTitle("");
     setNewTarget("");
+    setNewDeadline("");
     setNewAccountId("");
     setNewProjectId("");
     setAdding(false);
@@ -85,6 +88,20 @@ function GoalsModule() {
           const socialAccount = goal.accountId ? socialAccounts.find(a => a.id === goal.accountId) : null;
           const project = goal.projectId ? projects.find(p => p.id === goal.projectId) : null;
           
+          let daysRemaining = null;
+          let suggestedPace = null;
+          if (goal.deadline) {
+            const today = new Date();
+            const deadlineDate = new Date(goal.deadline + "T00:00:00");
+            const diffTime = deadlineDate.getTime() - today.getTime();
+            daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (daysRemaining > 0 && goal.current < goal.target) {
+              const left = goal.target - goal.current;
+              suggestedPace = Math.ceil(left / daysRemaining);
+            }
+          }
+          
           return (
             <div key={goal.id} className="bg-white rounded-xl border border-[#E5E7EB] p-5 shadow-sm flex flex-col group relative overflow-hidden">
               <div className="flex items-start justify-between mb-4 relative z-10">
@@ -126,19 +143,32 @@ function GoalsModule() {
                 </button>
               </div>
 
-              <h3 className="font-medium text-[#111827] mb-4 flex-1 line-clamp-2">
+              <h3 className="font-medium text-[#111827] mb-2 flex-1 line-clamp-2">
                 {goal.title}
               </h3>
+
+              {daysRemaining !== null && (
+                <div className="mb-4">
+                  <span className={`text-[11px] font-semibold px-2 py-1 rounded-md ${
+                    daysRemaining < 0 ? "bg-red-100 text-red-700" :
+                    daysRemaining === 0 ? "bg-orange-100 text-orange-700" :
+                    "bg-[#F3F4F6] text-[#4B5563]"
+                  }`}>
+                    {daysRemaining < 0 ? "Vencida" : daysRemaining === 0 ? "Vence hoy" : `⏳ Faltan ${daysRemaining} días`}
+                  </span>
+                </div>
+              )}
 
               <div className="mt-auto relative z-10">
                 <div className="flex items-end justify-between mb-2">
                   <div className="flex flex-col">
-                    <span className="text-[10px] uppercase tracking-wider text-[#9CA3AF] font-medium mb-1">Progreso Actual</span>
+                    <span className="text-[10px] uppercase tracking-wider text-[#9CA3AF] font-medium mb-1">Total Actual</span>
                     <div className="flex items-center gap-1.5">
                       <input 
                         type="number"
-                        value={goal.current}
+                        value={goal.current === 0 ? "" : goal.current}
                         onChange={(e) => updateGoalProgress(goal.id, Number(e.target.value))}
+                        placeholder="0"
                         className="w-20 px-2 py-1 text-sm font-semibold text-[#111827] bg-[#F9FAFB] border border-[#E5E7EB] rounded-md focus:outline-none focus:border-[#6366F1] focus:ring-1 focus:ring-[#6366F1]"
                       />
                       <span className="text-sm text-[#6B7280]">/ {goal.target.toLocaleString()}</span>
@@ -146,12 +176,18 @@ function GoalsModule() {
                   </div>
                   <div className="text-sm font-bold text-[#6366F1]">{percent}%</div>
                 </div>
-                <div className="w-full h-2 rounded-full bg-[#E5E7EB] overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-[#E5E7EB] overflow-hidden mb-1.5">
                   <div 
                     className="h-full bg-[#6366F1] rounded-full transition-all duration-500 ease-out" 
                     style={{ width: `${percent}%` }}
                   />
                 </div>
+                {suggestedPace !== null && (
+                  <div className="text-[10px] text-[#6B7280] text-right h-3">
+                    Ritmo sugerido: <span className="font-semibold text-[#4B5563]">+{suggestedPace.toLocaleString()} por día</span>
+                  </div>
+                )}
+                {suggestedPace === null && <div className="h-3" />}
               </div>
             </div>
           );
@@ -173,7 +209,13 @@ function GoalsModule() {
                 value={newTarget}
                 onChange={(e) => setNewTarget(e.target.value)}
                 placeholder="Objetivo numérico (ej. 10000)"
-                className="w-full text-xs px-2 py-1.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-md outline-none focus:border-[#6366F1]"
+                className="w-1/2 text-xs px-2 py-1.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-md outline-none focus:border-[#6366F1]"
+              />
+              <input 
+                type="date"
+                value={newDeadline}
+                onChange={(e) => setNewDeadline(e.target.value)}
+                className="w-1/2 text-xs px-2 py-1.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-md outline-none focus:border-[#6366F1] text-[#6B7280]"
               />
             </div>
             <div className="mb-4 space-y-2">

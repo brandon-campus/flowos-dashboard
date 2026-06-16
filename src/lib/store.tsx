@@ -45,6 +45,8 @@ export type Goal = {
   current: number;
   target: number;
   period: GoalPeriod;
+  deadline?: string; // YYYY-MM-DD
+  history?: { date: string, value: number }[]; // Daily log
   accountId?: string; // Optional link to a social account
   projectId?: string; // Optional link to a project
 };
@@ -90,7 +92,7 @@ type StoreContextType = {
   logStory: (accountId: string, date: string) => void;
   toggleVideo: (accountId: string, date: string) => void;
 
-  addGoal: (goal: Omit<Goal, "id">) => void;
+  addGoal: (goal: Omit<Goal, "id" | "history">) => void;
   updateGoalProgress: (id: string, current: number) => void;
   deleteGoal: (id: string) => void;
 
@@ -133,9 +135,35 @@ const initialInboxTasks: InboxTask[] = [
 ];
 
 const initialGoals: Goal[] = [
-  { id: "g1", title: "Llegar a 10K Seguidores en IG", current: 8500, target: 10000, period: "mensual", accountId: "ig-lab" },
-  { id: "g2", title: "Subir 3 videos virales", current: 1, target: 3, period: "semanal", accountId: "tk-lab" },
-  { id: "g3", title: "Cerrar 5 clientes B2B", current: 2, target: 5, period: "trimestral" }
+  { 
+    id: "g1", 
+    title: "Llegar a 10K Seguidores en IG", 
+    current: 8500, 
+    target: 10000, 
+    period: "mensual", 
+    deadline: "2026-06-30",
+    history: [{ date: "2026-06-15", value: 8400 }],
+    accountId: "ig-lab" 
+  },
+  { 
+    id: "g2", 
+    title: "Subir 3 videos virales", 
+    current: 1, 
+    target: 3, 
+    period: "semanal",
+    deadline: "2026-06-21", 
+    history: [],
+    accountId: "tk-lab" 
+  },
+  { 
+    id: "g3", 
+    title: "Cerrar 5 clientes B2B", 
+    current: 2, 
+    target: 5, 
+    period: "trimestral",
+    deadline: "2026-09-30",
+    history: []
+  }
 ];
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -642,12 +670,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addGoal = (goal: Omit<Goal, "id">) => {
-    setGoals(prev => [...prev, { ...goal, id: `goal-${Date.now()}` }]);
+  const addGoal = (goal: Omit<Goal, "id" | "history">) => {
+    setGoals(prev => [...prev, { ...goal, id: `goal-${Date.now()}`, history: [] }]);
   };
 
   const updateGoalProgress = (id: string, current: number) => {
-    setGoals(prev => prev.map(g => g.id === id ? { ...g, current } : g));
+    setGoals(prev => prev.map(g => {
+      if (g.id !== id) return g;
+      const today = new Date().toISOString().split('T')[0];
+      const newHistory = [...(g.history || [])];
+      
+      // Update today's entry or add a new one
+      const todayIndex = newHistory.findIndex(h => h.date === today);
+      if (todayIndex >= 0) {
+        newHistory[todayIndex].value = current;
+      } else {
+        newHistory.push({ date: today, value: current });
+      }
+      
+      return { ...g, current, history: newHistory };
+    }));
   };
 
   const deleteGoal = (id: string) => {
