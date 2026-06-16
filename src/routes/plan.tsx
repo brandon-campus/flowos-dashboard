@@ -25,7 +25,9 @@ function DailyPlanner() {
     timeBlocks,
     updateTimeBlock,
     startFlow,
-    startHour
+    startHour,
+    toggleInboxTaskCompletion,
+    toggleTaskCompletion
   } = useStore();
 
   // Generate hours dynamically starting from user's startHour
@@ -229,9 +231,14 @@ function DailyPlanner() {
                       key={task.id} 
                       draggable
                       onDragStart={(e) => handleDragStart(e, task.text, task.id, "inbox")}
-                      className="group flex items-center justify-between bg-white dark:bg-[#09090B] border border-[#E5E7EB] dark:border-[#27272A] p-3 rounded-lg hover:border-[#6366F1] cursor-grab active:cursor-grabbing transition"
+                      className="group flex items-center gap-2 bg-white dark:bg-[#09090B] border border-[#E5E7EB] dark:border-[#27272A] p-3 rounded-lg hover:border-[#6366F1] cursor-grab active:cursor-grabbing transition"
                     >
-                      <span className="text-sm text-[#374151] dark:text-[#D1D5DB] select-none">{task.text}</span>
+                      <button
+                        onClick={() => toggleInboxTaskCompletion(task.id)}
+                        className="w-4 h-4 shrink-0 rounded border flex items-center justify-center transition border-[#D1D5DB] dark:border-[#3F3F46] hover:border-[#10B981] hover:bg-[#10B981]/10"
+                        title="Completar tarea"
+                      />
+                      <span className="flex-1 text-sm text-[#374151] dark:text-[#D1D5DB] select-none truncate">{task.text}</span>
                       <button 
                         onClick={() => setTaskToSchedule({ id: task.id, type: "inbox", text: task.text })}
                         className="md:opacity-0 opacity-100 group-hover:opacity-100 p-2 text-[#9CA3AF] hover:text-[#6366F1] bg-[#F3F4F6] dark:bg-[#27272A] hover:bg-[#EEF2FF] dark:hover:bg-[#1E1B4B] rounded-lg transition shrink-0"
@@ -258,9 +265,14 @@ function DailyPlanner() {
                       key={task.id} 
                       draggable
                       onDragStart={(e) => handleDragStart(e, task.text, task.id, "project", project.id)}
-                      className="group flex items-center justify-between bg-white dark:bg-[#09090B] border border-[#E5E7EB] dark:border-[#27272A] p-3 rounded-lg hover:border-[#6366F1] cursor-grab active:cursor-grabbing transition"
+                      className="group flex items-center gap-2 bg-white dark:bg-[#09090B] border border-[#E5E7EB] dark:border-[#27272A] p-3 rounded-lg hover:border-[#6366F1] cursor-grab active:cursor-grabbing transition"
                     >
-                      <span className="text-sm text-[#374151] dark:text-[#D1D5DB] select-none">{task.text}</span>
+                      <button
+                        onClick={() => toggleTaskCompletion(project.id, task.id)}
+                        className="w-4 h-4 shrink-0 rounded border flex items-center justify-center transition border-[#D1D5DB] dark:border-[#3F3F46] hover:border-[#10B981] hover:bg-[#10B981]/10"
+                        title="Completar tarea"
+                      />
+                      <span className="flex-1 text-sm text-[#374151] dark:text-[#D1D5DB] select-none truncate">{task.text}</span>
                       <button 
                         onClick={() => setTaskToSchedule({ id: task.id, type: "project", projectId: project.id, text: task.text })}
                         className="md:opacity-0 opacity-100 group-hover:opacity-100 p-2 text-[#9CA3AF] hover:text-[#6366F1] bg-[#F3F4F6] dark:bg-[#27272A] hover:bg-[#EEF2FF] dark:hover:bg-[#1E1B4B] rounded-lg transition shrink-0"
@@ -304,9 +316,16 @@ function DailyPlanner() {
                       key={task.id} 
                       draggable
                       onDragStart={(e) => handleDragStart(e, task.text, task.id, "inbox")}
-                      className="group flex items-center justify-between bg-[#F9FAFB] dark:bg-[#18181B] border border-[#E5E7EB] dark:border-[#27272A] p-2 rounded-md hover:border-[#6366F1] cursor-grab active:cursor-grabbing transition"
+                      className="group flex items-center justify-between gap-2 bg-[#F9FAFB] dark:bg-[#18181B] border border-[#E5E7EB] dark:border-[#27272A] p-2 rounded-md hover:border-[#6366F1] cursor-grab active:cursor-grabbing transition"
                     >
-                      <span className="text-xs font-medium text-[#111827] dark:text-[#F9FAFB]">{task.text}</span>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <button
+                          onClick={() => toggleInboxTaskCompletion(task.id)}
+                          className="w-3.5 h-3.5 shrink-0 rounded border flex items-center justify-center transition border-[#D1D5DB] dark:border-[#3F3F46] hover:border-[#10B981] hover:bg-[#10B981]/10"
+                          title="Completar tarea"
+                        />
+                        <span className="text-xs font-medium text-[#111827] dark:text-[#F9FAFB] truncate">{task.text}</span>
+                      </div>
                       <button 
                         onClick={() => toggleInboxTaskPriority(task.id)}
                         className="md:opacity-0 opacity-100 group-hover:opacity-100 p-2 text-[#9CA3AF] hover:text-[#EF4444] rounded-lg transition shrink-0"
@@ -322,11 +341,16 @@ function DailyPlanner() {
                         key={task.id} 
                         draggable
                         onDragStart={(e) => handleDragStart(e, task.text, task.id, "project", project.id)}
-                        className="group flex items-center justify-between bg-[#F9FAFB] dark:bg-[#18181B] border border-[#E5E7EB] dark:border-[#27272A] p-2 rounded-md hover:border-[#6366F1] cursor-grab active:cursor-grabbing transition"
+                        className="group flex items-center justify-between gap-2 bg-[#F9FAFB] dark:bg-[#18181B] border border-[#E5E7EB] dark:border-[#27272A] p-2 rounded-md hover:border-[#6366F1] cursor-grab active:cursor-grabbing transition"
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: project.color }} />
-                          <span className="text-xs font-medium text-[#111827] dark:text-[#F9FAFB]">{task.text}</span>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <button
+                            onClick={() => toggleTaskCompletion(project.id, task.id)}
+                            className="w-3.5 h-3.5 shrink-0 rounded border flex items-center justify-center transition border-[#D1D5DB] dark:border-[#3F3F46] hover:border-[#10B981] hover:bg-[#10B981]/10"
+                            title="Completar tarea"
+                          />
+                          <span className="w-1.5 h-1.5 shrink-0 rounded-full" style={{ backgroundColor: project.color }} />
+                          <span className="text-xs font-medium text-[#111827] dark:text-[#F9FAFB] truncate">{task.text}</span>
                         </div>
                         <button 
                           onClick={() => toggleProjectTaskPriority(project.id, task.id)}

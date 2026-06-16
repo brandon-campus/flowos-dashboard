@@ -21,6 +21,24 @@ function FlowMode() {
   const [isPaused, setIsPaused] = useState(false);
   const [showMusic, setShowMusic] = useState(false);
 
+  // Subtasks state
+  const [subtasks, setSubtasks] = useState<{id: string, text: string, done: boolean}[]>([]);
+  const [newTaskText, setNewTaskText] = useState("");
+
+  const addSubtask = () => {
+    if(!newTaskText.trim()) return;
+    setSubtasks([...subtasks, { id: Date.now().toString(), text: newTaskText, done: false }]);
+    setNewTaskText("");
+  };
+
+  const toggleSubtask = (id: string) => {
+    setSubtasks(subtasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  };
+
+  const deleteSubtask = (id: string) => {
+    setSubtasks(subtasks.filter(t => t.id !== id));
+  };
+
   useEffect(() => {
     if (!activeFlow) {
       navigate({ to: "/plan" });
@@ -117,9 +135,11 @@ function FlowMode() {
   const totalSeconds = activeFlow.minutes * 60;
   
   return (
-    <div className="fixed inset-0 bg-[#09090B] text-white z-[100] flex flex-col justify-between overflow-hidden">
+    <div className="fixed inset-0 bg-[#09090B] text-white z-[100] flex flex-col md:flex-row h-screen overflow-hidden">
       
-      {/* TOP BAR */}
+      {/* MAIN TIMER AREA */}
+      <div className="flex-1 flex flex-col justify-between relative overflow-y-auto">
+        {/* TOP BAR */}
       <div className="flex justify-between items-center p-6 sm:p-10 relative z-20">
         <div className="text-xl font-bold tracking-tight text-white/90">
           FlowOS
@@ -269,10 +289,70 @@ function FlowMode() {
         )}
       </div>
 
-      {/* BOTTOM FOOTER */}
-      <div className="p-6 sm:p-10 text-center text-white/30 text-sm relative z-20">
-        {phase === "focus" ? "Mantén este tab abierto. Las notificaciones están silenciadas." : ""}
+        {/* BOTTOM FOOTER */}
+        <div className="p-6 sm:p-10 text-center text-white/30 text-sm relative z-20">
+          {phase === "focus" ? "Mantén este tab abierto. Las notificaciones están silenciadas." : ""}
+        </div>
       </div>
+
+      {/* RIGHT SIDEBAR: Mini Tareas */}
+      {(phase === "ready" || phase === "focus") && (
+        <div className="w-full md:w-80 lg:w-96 bg-black/40 border-t md:border-t-0 md:border-l border-white/10 flex flex-col h-[45vh] md:h-screen shrink-0 relative z-20 animate-in fade-in duration-500">
+          <div className="p-4 md:p-6 border-b border-white/5 flex items-center justify-between shrink-0 bg-white/5">
+            <h3 className="font-semibold text-white/90">Mini tareas</h3>
+            <span className="text-xs bg-white/10 text-white/60 px-2 py-1 rounded-full">
+              {subtasks.filter(t => t.done).length} / {subtasks.length}
+            </span>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {subtasks.map(task => (
+              <div key={task.id} className="group flex items-start gap-3 bg-white/5 hover:bg-white/10 p-3 rounded-xl border border-white/5 transition">
+                <button 
+                  onClick={() => toggleSubtask(task.id)}
+                  className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center shrink-0 border transition ${task.done ? 'bg-[#10B981] border-[#10B981]' : 'border-white/20'}`}
+                >
+                  {task.done && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                </button>
+                <span className={`flex-1 text-sm ${task.done ? 'text-white/40 line-through' : 'text-white/90'}`}>
+                  {task.text}
+                </span>
+                <button 
+                  onClick={() => deleteSubtask(task.id)}
+                  className="md:opacity-0 opacity-100 group-hover:opacity-100 text-white/40 hover:text-red-400 p-1 -mr-1 transition"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+            {subtasks.length === 0 && (
+              <div className="text-center py-8 text-white/40 text-sm">
+                Agregá los pasos para completar esta tarea.
+              </div>
+            )}
+          </div>
+          
+          <div className="p-4 border-t border-white/5 shrink-0 bg-white/5 pb-safe">
+            <div className="flex items-center gap-2 bg-black/20 border border-white/10 rounded-xl p-1 focus-within:border-[#6366F1] transition">
+              <input 
+                type="text" 
+                value={newTaskText}
+                onChange={e => setNewTaskText(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addSubtask()}
+                placeholder="Ej: Buscar el contenido..."
+                className="flex-1 bg-transparent border-none px-3 py-2 text-base md:text-sm text-white placeholder:text-white/30 focus:outline-none"
+              />
+              <button 
+                onClick={addSubtask}
+                disabled={!newTaskText.trim()}
+                className="w-8 h-8 rounded-lg bg-[#6366F1] text-white flex items-center justify-center hover:bg-[#4F46E5] disabled:opacity-50 disabled:hover:bg-[#6366F1] transition shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
