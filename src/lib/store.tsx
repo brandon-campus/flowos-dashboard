@@ -68,6 +68,7 @@ type StoreContextType = {
   
   // Mutations
   addProject: (project: Omit<Project, "id">) => void;
+  updateProject: (id: string, updates: Partial<Project>) => void;
   addTask: (projectId: string, text: string) => void;
   toggleTaskCompletion: (projectId: string, taskId: string) => void;
   toggleProjectTaskPriority: (projectId: string, taskId: string) => void;
@@ -371,6 +372,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateProject = async (id: string, updates: Partial<Project>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    
+    const dbUpdates: any = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.area !== undefined) dbUpdates.area = updates.area;
+    if (updates.color !== undefined) dbUpdates.color = updates.color;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    
+    if (Object.keys(dbUpdates).length > 0 && !id.includes("temp")) {
+      await supabase.from("projects").update(dbUpdates).eq("id", id);
+    }
+  };
+
   const addTask = async (projectId: string, text: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
@@ -662,7 +680,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     <StoreContext.Provider value={{ 
       user, logout, completeOnboarding,
       theme, toggleTheme,
-      projects, inboxTasks, addProject, addTask, toggleTaskCompletion, toggleProjectTaskPriority, setProjectTaskPriority, addNote, 
+      projects, inboxTasks, addProject, updateProject, addTask, toggleTaskCompletion, toggleProjectTaskPriority, setProjectTaskPriority, addNote, 
       addTaskToInbox, assignInboxTaskToProject, deleteInboxTask, toggleInboxTaskCompletion, toggleInboxTaskPriority, setInboxTaskPriority,
       scripts, socialAccounts, createScript, updateScript, deleteScript, addSocialAccount, logStory, toggleVideo,
         goals, addGoal, updateGoalProgress, deleteGoal,

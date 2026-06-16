@@ -1,10 +1,11 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { Sparkles, RefreshCw, Plus, Trash2, MessageCircle } from "lucide-react";
+import { Sparkles, RefreshCw, Plus, Trash2, MessageCircle, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
-import type { Priority, Note, Contact } from "@/lib/mock-data";
+import type { Priority, Note, Contact, Area, Status } from "@/lib/mock-data";
 import { TaskRow } from "@/components/task-row";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/projects/$projectId")({
   loader: ({ params }) => {
@@ -19,13 +20,15 @@ export const Route = createFileRoute("/projects/$projectId")({
 
 const groupLabels: Record<Priority, string> = {
   hoy: "HOY",
+  "mañana": "MAÑANA",
+  "esta_semana": "ESTA SEMANA",
   "esta semana": "ESTA SEMANA",
   "algún día": "ALGÚN DÍA",
 };
 
 function ProjectView() {
   const { projectId } = Route.useLoaderData();
-  const { projects, addTask, addNote, toggleTaskCompletion } = useStore();
+  const { projects, addTask, addNote, toggleTaskCompletion, updateProject } = useStore();
   const project = projects.find(p => p.id === projectId);
   
   const [tab, setTab] = useState<"pendientes" | "completadas">("pendientes");
@@ -34,6 +37,8 @@ function ProjectView() {
   const [newTask, setNewTask] = useState("");
   const [addingNote, setAddingNote] = useState(false);
   const [newNote, setNewNote] = useState("");
+  const [editingProject, setEditingProject] = useState(false);
+  const [editForm, setEditForm] = useState({ name: "", area: "trabajo" as Area, color: "", status: "activo" as Status });
 
   if (!project) return <div className="p-8 text-center text-gray-500">Proyecto no encontrado.</div>;
 
@@ -47,7 +52,7 @@ function ProjectView() {
 
   const handleAddTask = () => {
     if (newTask.trim()) {
-      addTask(project.id, newTask.trim(), "esta semana");
+      addTask(project.id, newTask.trim());
       toast.success("Tarea guardada");
     }
     setNewTask("");
@@ -61,6 +66,26 @@ function ProjectView() {
     }
     setNewNote("");
     setAddingNote(false);
+  };
+
+  const handleEditOpen = () => {
+    setEditForm({ name: project.name, area: project.area, color: project.color, status: project.status });
+    setEditingProject(true);
+  };
+
+  const handleEditSave = () => {
+    if (!editForm.name.trim()) {
+      toast.error("El nombre no puede estar vacío");
+      return;
+    }
+    updateProject(project.id, {
+      name: editForm.name.trim(),
+      area: editForm.area,
+      color: editForm.color,
+      status: editForm.status
+    });
+    setEditingProject(false);
+    toast.success("Proyecto actualizado");
   };
 
   const groups: Priority[] = ["hoy", "esta semana", "algún día"];
@@ -87,9 +112,74 @@ function ProjectView() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-[#9CA3AF]">Última actividad: {project.lastActivity}</span>
-          <button className="px-2.5 py-1 text-xs border border-[#E5E7EB] rounded-md hover:bg-[#F3F4F6]">
-            Editar
-          </button>
+          <Dialog open={editingProject} onOpenChange={setEditingProject}>
+            <DialogTrigger asChild>
+              <button onClick={handleEditOpen} className="px-2.5 py-1 text-xs border border-[#E5E7EB] dark:border-[#27272A] rounded-md hover:bg-[#F3F4F6] dark:hover:bg-[#27272A] flex items-center gap-1 transition-colors">
+                <Settings2 className="w-3.5 h-3.5" /> Editar
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Editar Proyecto</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Nombre</label>
+                  <input
+                    value={editForm.name}
+                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] dark:border-[#27272A] bg-transparent rounded-md focus:outline-none focus:ring-1 focus:ring-[#6366F1]"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Área</label>
+                  <select
+                    value={editForm.area}
+                    onChange={e => setEditForm({ ...editForm, area: e.target.value as Area })}
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] dark:border-[#27272A] bg-background rounded-md focus:outline-none focus:ring-1 focus:ring-[#6366F1]"
+                  >
+                    <option value="trabajo">Trabajo</option>
+                    <option value="cliente">Cliente</option>
+                    <option value="personal">Personal</option>
+                    <option value="comunidad">Comunidad</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Estado</label>
+                  <select
+                    value={editForm.status}
+                    onChange={e => setEditForm({ ...editForm, status: e.target.value as Status })}
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] dark:border-[#27272A] bg-background rounded-md focus:outline-none focus:ring-1 focus:ring-[#6366F1]"
+                  >
+                    <option value="activo">Activo</option>
+                    <option value="pausado">Pausado</option>
+                    <option value="cerrado">Cerrado</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium mb-1">Color representativo</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {["#6366F1", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#3B82F6", "#14B8A6"].map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setEditForm({ ...editForm, color: c })}
+                        className={`w-6 h-6 rounded-full transition-transform ${editForm.color === c ? "ring-2 ring-offset-2 ring-black dark:ring-white scale-110" : "hover:scale-110"}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 mt-2">
+                <button onClick={() => setEditingProject(false)} className="px-4 py-2 text-sm font-medium border border-[#E5E7EB] dark:border-[#27272A] rounded-md hover:bg-[#F3F4F6] dark:hover:bg-[#27272A] transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={handleEditSave} className="px-4 py-2 text-sm font-medium bg-[#6366F1] text-white rounded-md hover:bg-[#4F46E5] transition-colors">
+                  Guardar
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

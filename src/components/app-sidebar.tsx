@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, FolderKanban, Inbox, Settings, Search, Hexagon, User, FileText, Smartphone, Target, CalendarDays } from "lucide-react";
+import { Home, FolderKanban, Inbox, Settings, Search, Hexagon, User, FileText, Smartphone, Target, CalendarDays, Mail } from "lucide-react";
 import { activeProjects } from "@/lib/mock-data";
 import { useQuickCapture } from "./quick-capture";
 import { useState } from "react";
@@ -81,6 +81,7 @@ export function AppSidebar() {
         <nav className="space-y-0.5">
           <NavItem to="/social" icon={Smartphone} label="Redes Sociales" />
           <NavItem to="/scripts" icon={FileText} label="Guiones" />
+          <NavItem to="/contact" icon={Mail} label="Contacto" />
         </nav>
       </div>
 
