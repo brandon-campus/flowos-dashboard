@@ -12,7 +12,7 @@ export const useQuickCapture = () => useContext(QuickCaptureCtx);
 export function QuickCaptureProvider({ children }: { children: ReactNode }) {
   const [isOpen, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const { projects, addTask } = useStore();
+  const { projects, addTask, addTaskToInbox } = useStore();
   const activeProjects = projects.filter((p) => p.status === "activo");
   
   const [projectId, setProjectId] = useState<string>("inbox");
@@ -45,7 +45,7 @@ export function QuickCaptureProvider({ children }: { children: ReactNode }) {
     if (!text.trim()) return;
     
     if (projectId === "inbox") {
-      addTask(null, text, priority);
+      addTaskToInbox(text, priority);
       toast.success("Tarea enviada a Inbox");
     } else {
       addTask(projectId, text, priority);

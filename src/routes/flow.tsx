@@ -133,6 +133,7 @@ function FlowMode() {
   if (!activeFlow) return null;
 
   const totalSeconds = activeFlow.minutes * 60;
+  const Player = ReactPlayer as any;
   
   return (
     <div className="fixed inset-0 bg-[#09090B] text-white z-[100] flex flex-col md:flex-row h-screen overflow-hidden">
@@ -267,8 +268,7 @@ function FlowMode() {
       <div className="absolute bottom-6 right-6 sm:bottom-10 sm:right-10 z-50 flex flex-col items-end gap-3">
         {/* React Player visually hidden but present in DOM so it plays */}
         <div className="absolute w-0 h-0 opacity-0 pointer-events-none overflow-hidden">
-          {/* @ts-ignore: ReactPlayer types are sometimes missing in Vite fast refresh */}
-          <ReactPlayer 
+          <Player 
             url="https://www.youtube.com/watch?v=BrgfuE_bMC8" 
             playing={showMusic} 
             loop={true} 

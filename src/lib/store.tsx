@@ -71,12 +71,12 @@ type StoreContextType = {
   // Mutations
   addProject: (project: Omit<Project, "id">) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
-  addTask: (projectId: string, text: string) => void;
+  addTask: (projectId: string, text: string, priority?: "hoy" | "mañana" | "esta_semana") => void;
   toggleTaskCompletion: (projectId: string, taskId: string) => void;
   toggleProjectTaskPriority: (projectId: string, taskId: string) => void;
   addNote: (projectId: string, noteText: string) => void;
 
-  addTaskToInbox: (text: string) => void;
+  addTaskToInbox: (text: string, priority?: "hoy" | "mañana" | "esta_semana") => void;
   assignInboxTaskToProject: (taskId: string, projectId: string) => void;
   deleteInboxTask: (taskId: string) => void;
   toggleInboxTaskCompletion: (taskId: string) => void;
@@ -441,17 +441,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addTask = async (projectId: string, text: string) => {
+  const addTask = async (projectId: string, text: string, priority?: "hoy" | "mañana" | "esta_semana") => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     const tempId = `task-temp-${Date.now()}`;
-    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, tasks: [...p.tasks, { id: tempId, text, completed: false }] } : p));
+    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, tasks: [...p.tasks, { id: tempId, text, completed: false, priority }] } : p));
     
     const { data } = await supabase.from("tasks").insert({
       user_id: session.user.id,
       project_id: projectId,
       text,
-      completed: false
+      completed: false,
+      priority: priority || null
     }).select().single();
     
     if (data) {
@@ -524,16 +525,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addTaskToInbox = async (text: string) => {
+  const addTaskToInbox = async (text: string, priority?: "hoy" | "mañana" | "esta_semana") => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     const tempId = `inbox-temp-${Date.now()}`;
-    setInboxTasks(prev => [...prev, { id: tempId, text }]);
+    setInboxTasks(prev => [...prev, { id: tempId, text, priority }]);
     
     const { data } = await supabase.from("inbox_tasks").insert({
       user_id: session.user.id,
       text,
-      completed: false
+      completed: false,
+      priority: priority || null
     }).select().single();
     
     if (data) {

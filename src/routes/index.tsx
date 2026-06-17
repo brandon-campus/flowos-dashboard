@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  const { user, projects, inboxTasks, toggleTaskCompletion, goals } = useStore();
+  const { user, projects, inboxTasks, toggleTaskCompletion, toggleInboxTaskCompletion, goals } = useStore();
   const activeProjects = projects.filter((p) => p.status === "activo");
 
   const todayTasks = projects
@@ -207,7 +207,7 @@ function Dashboard() {
                           key={t.id} 
                           text={t.text} 
                           initialDone={t.completed || false} 
-                          onToggle={() => useStore.getState().toggleInboxTaskCompletion(t.id)} 
+                          onToggle={() => toggleInboxTaskCompletion(t.id)} 
                         />
                       ))}
                     </div>
