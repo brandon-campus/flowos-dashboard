@@ -239,7 +239,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       { data: dbInbox },
       { data: dbTimeBlocks },
       { data: dbSocialAccounts },
-      { data: dbSocialDays }
+      { data: dbSocialDays },
+      { data: dbGoals },
+      { data: dbGoalHistory }
     ] = await Promise.all([
       supabase.from("projects").select("*").eq("user_id", userId),
       supabase.from("tasks").select("*").eq("user_id", userId),
@@ -247,7 +249,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       supabase.from("inbox_tasks").select("*").eq("user_id", userId),
       supabase.from("time_blocks").select("*").eq("user_id", userId),
       supabase.from("social_accounts").select("*").eq("user_id", userId),
-      supabase.from("social_days").select("*").eq("user_id", userId).gte("date_key", sevenDaysAgo)
+      supabase.from("social_days").select("*").eq("user_id", userId).gte("date_key", sevenDaysAgo),
+      supabase.from("goals").select("*").eq("user_id", userId),
+      supabase.from("goal_history").select("*").eq("user_id", userId)
     ]);
 
     if (dbProjects) {
@@ -308,6 +312,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         };
       });
       setSocialAccounts(assembledSocial);
+    }
+
+    if (dbGoals) {
+      const assembledGoals = dbGoals.map(g => ({
+        id: g.id,
+        title: g.title,
+        current: g.current,
+        target: g.target,
+        period: g.period as any,
+        deadline: g.deadline || undefined,
+        accountId: g.account_id || undefined,
+        projectId: g.project_id || undefined,
+        history: (dbGoalHistory || []).filter(h => h.goal_id === g.id).map(h => ({
+          date: h.date_key,
+          value: h.value
+        }))
+      }));
+      setGoals(assembledGoals);
+    } else {
+      setGoals([]);
     }
   };
 
@@ -670,17 +694,38 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addGoal = (goal: Omit<Goal, "id" | "history">) => {
-    setGoals(prev => [...prev, { ...goal, id: `goal-${Date.now()}`, history: [] }]);
+  const addGoal = async (goal: Omit<Goal, "id" | "history">) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const tempId = `goal-temp-${Date.now()}`;
+    setGoals(prev => [...prev, { ...goal, id: tempId, history: [] }]);
+
+    const { data } = await supabase.from("goals").insert({
+      user_id: session.user.id,
+      title: goal.title,
+      current: goal.current,
+      target: goal.target,
+      period: goal.period,
+      deadline: goal.deadline || null,
+      account_id: goal.accountId || null,
+      project_id: goal.projectId || null
+    }).select().single();
+
+    if (data) {
+      setGoals(prev => prev.map(g => g.id === tempId ? { ...g, id: data.id } : g));
+    }
   };
 
-  const updateGoalProgress = (id: string, current: number) => {
+  const updateGoalProgress = async (id: string, current: number) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const today = new Date().toISOString().split('T')[0];
+
     setGoals(prev => prev.map(g => {
       if (g.id !== id) return g;
-      const today = new Date().toISOString().split('T')[0];
       const newHistory = [...(g.history || [])];
       
-      // Update today's entry or add a new one
       const todayIndex = newHistory.findIndex(h => h.date === today);
       if (todayIndex >= 0) {
         newHistory[todayIndex].value = current;
@@ -690,10 +735,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       
       return { ...g, current, history: newHistory };
     }));
+
+    if (!id.includes("temp")) {
+      await supabase.from("goals").update({ current }).eq("id", id);
+      
+      const { data: existing } = await supabase.from("goal_history").select("id").eq("goal_id", id).eq("date_key", today).single();
+      if (existing) {
+        await supabase.from("goal_history").update({ value: current }).eq("id", existing.id);
+      } else {
+        await supabase.from("goal_history").insert({
+          user_id: session.user.id,
+          goal_id: id,
+          date_key: today,
+          value: current
+        });
+      }
+    }
   };
 
-  const deleteGoal = (id: string) => {
+  const deleteGoal = async (id: string) => {
     setGoals(prev => prev.filter(g => g.id !== id));
+    if (!id.includes("temp")) {
+      await supabase.from("goals").delete().eq("id", id);
+    }
   };
 
   const updateTimeBlock = async (time: string, text: string) => {
