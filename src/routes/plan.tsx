@@ -44,10 +44,18 @@ function DailyPlanner() {
   })).filter(p => p.tasks.length > 0);
 
   // ----- MI DÍA (Sueltas) -----
-  const todayInbox = inboxTasks.filter(t => !t.completed && t.priority === "hoy");
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const todayInbox = inboxTasks.filter(t => !t.completed && t.priority === "hoy" && (!t.plannedDate || t.plannedDate >= todayStr));
   const todayProjects = projects.map(p => ({
     ...p,
-    tasks: p.tasks.filter(t => !t.completed && t.priority === "hoy")
+    tasks: p.tasks.filter(t => !t.completed && t.priority === "hoy" && (!t.plannedDate || t.plannedDate >= todayStr))
+  })).filter(p => p.tasks.length > 0);
+
+  const overdueInbox = inboxTasks.filter(t => !t.completed && t.priority === "hoy" && t.plannedDate && t.plannedDate < todayStr);
+  const overdueProjects = projects.map(p => ({
+    ...p,
+    tasks: p.tasks.filter(t => !t.completed && t.priority === "hoy" && t.plannedDate && t.plannedDate < todayStr)
   })).filter(p => p.tasks.length > 0);
 
   // --- DRAG AND DROP HANDLERS ---
@@ -304,6 +312,86 @@ function DailyPlanner() {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 bg-[#F8FAFC] dark:bg-[#18181B]">
+            
+            {/* Overdue Tasks (Atrasadas) */}
+            {(overdueInbox.length > 0 || overdueProjects.length > 0) && (
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-900 shadow-sm">
+                <h3 className="text-xs font-semibold text-red-600 dark:text-red-400 mb-3 uppercase tracking-wider">⚠️ Pendientes de Ayer</h3>
+                
+                <div className="space-y-1.5">
+                  {overdueInbox.map(task => (
+                    <div 
+                      key={task.id} 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, task.text, task.id, "inbox")}
+                      className="group flex items-center justify-between gap-2 bg-white dark:bg-[#09090B] border border-red-100 dark:border-red-900/50 p-2 rounded-md hover:border-red-300 cursor-grab active:cursor-grabbing transition"
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0 opacity-80">
+                        <button
+                          onClick={() => toggleInboxTaskCompletion(task.id)}
+                          className="w-3.5 h-3.5 shrink-0 rounded border flex items-center justify-center transition border-[#D1D5DB] dark:border-[#3F3F46] hover:border-[#10B981] hover:bg-[#10B981]/10"
+                          title="Completar tarea"
+                        />
+                        <span className="text-xs font-medium text-[#111827] dark:text-[#F9FAFB] truncate">{task.text}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => setInboxTaskPriority(task.id, "hoy")}
+                          className="p-1.5 text-xs font-medium text-[#6366F1] hover:bg-[#EEF2FF] dark:hover:bg-[#1E1B4B] rounded-lg transition shrink-0"
+                          title="Pasar a hoy"
+                        >
+                          Mover a Hoy
+                        </button>
+                        <button 
+                          onClick={() => setInboxTaskPriority(task.id, undefined)}
+                          className="p-1.5 text-[#9CA3AF] hover:text-red-500 rounded-lg transition shrink-0"
+                          title="Devolver al Backlog"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {overdueProjects.flatMap(project => 
+                    project.tasks.map(task => (
+                      <div 
+                        key={task.id} 
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, task.text, task.id, "project", project.id)}
+                        className="group flex items-center justify-between gap-2 bg-white dark:bg-[#09090B] border border-red-100 dark:border-red-900/50 p-2 rounded-md hover:border-red-300 cursor-grab active:cursor-grabbing transition"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0 opacity-80">
+                          <button
+                            onClick={() => toggleTaskCompletion(project.id, task.id)}
+                            className="w-3.5 h-3.5 shrink-0 rounded border flex items-center justify-center transition border-[#D1D5DB] dark:border-[#3F3F46] hover:border-[#10B981] hover:bg-[#10B981]/10"
+                            title="Completar tarea"
+                          />
+                          <span className="w-1.5 h-1.5 shrink-0 rounded-full" style={{ backgroundColor: project.color }} />
+                          <span className="text-xs font-medium text-[#111827] dark:text-[#F9FAFB] truncate">{task.text}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button 
+                            onClick={() => setProjectTaskPriority(project.id, task.id, "hoy")}
+                            className="p-1.5 text-xs font-medium text-[#6366F1] hover:bg-[#EEF2FF] dark:hover:bg-[#1E1B4B] rounded-lg transition shrink-0"
+                            title="Pasar a hoy"
+                          >
+                            Mover a Hoy
+                          </button>
+                          <button 
+                            onClick={() => setProjectTaskPriority(project.id, task.id, undefined)}
+                            className="p-1.5 text-[#9CA3AF] hover:text-red-500 rounded-lg transition shrink-0"
+                            title="Devolver al Backlog"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* Unscheduled Today Tasks (Sueltas) */}
             {(todayInbox.length > 0 || todayProjects.length > 0) && (

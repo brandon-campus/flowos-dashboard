@@ -8,6 +8,7 @@ export interface Task {
   priority?: Priority;
   completed?: boolean;
   completedAgo?: string;
+  plannedDate?: string;
 }
 
 export interface Note {

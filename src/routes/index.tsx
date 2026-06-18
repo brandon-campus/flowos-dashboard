@@ -25,6 +25,7 @@ function Dashboard() {
     
   const totalTodayTasks = todayTasks.reduce((a, g) => a + g.tasks.length, 0) + todayInboxTasks.length;
   const totalGoals = goals.length;
+  const todayStr = new Date().toISOString().split('T')[0];
   
   // Format date dynamically
   const dateOptions: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -185,7 +186,7 @@ function Dashboard() {
                       {tasks.map((t) => (
                         <TaskRow 
                           key={t.id} 
-                          text={t.text} 
+                          text={t.plannedDate && t.plannedDate < todayStr ? `⚠️ [Atrasada] ${t.text}` : t.text} 
                           initialDone={t.completed} 
                           onToggle={() => toggleTaskCompletion(project.id, t.id)} 
                         />
@@ -205,7 +206,7 @@ function Dashboard() {
                       {todayInboxTasks.map((t) => (
                         <TaskRow 
                           key={t.id} 
-                          text={t.text} 
+                          text={t.plannedDate && t.plannedDate < todayStr ? `⚠️ [Atrasada] ${t.text}` : t.text} 
                           initialDone={t.completed || false} 
                           onToggle={() => toggleInboxTaskCompletion(t.id)} 
                         />

@@ -21,6 +21,7 @@ export type InboxTask = {
   text: string;
   completed?: boolean;
   priority?: "hoy" | "mañana" | "esta_semana";
+  plannedDate?: string; // YYYY-MM-DD
 };
 
 export type SocialDay = {
@@ -74,6 +75,7 @@ type StoreContextType = {
   addTask: (projectId: string, text: string, priority?: "hoy" | "mañana" | "esta_semana") => void;
   toggleTaskCompletion: (projectId: string, taskId: string) => void;
   toggleProjectTaskPriority: (projectId: string, taskId: string) => void;
+  setProjectTaskPriority: (projectId: string, taskId: string, priority: "hoy" | undefined) => void;
   addNote: (projectId: string, noteText: string) => void;
 
   addTaskToInbox: (text: string, priority?: "hoy" | "mañana" | "esta_semana") => void;
@@ -229,6 +231,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return `${year}-${month}-${day}`;
     };
 
+    const todayStr = getLocalDateString(new Date());
     const sevenDaysAgoDate = new Date(Date.now() - 7 * 86400000);
     const sevenDaysAgo = getLocalDateString(sevenDaysAgoDate);
 
@@ -247,7 +250,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       supabase.from("tasks").select("*").eq("user_id", userId),
       supabase.from("notes").select("*").eq("user_id", userId),
       supabase.from("inbox_tasks").select("*").eq("user_id", userId),
-      supabase.from("time_blocks").select("*").eq("user_id", userId),
+      supabase.from("time_blocks").select("*").eq("user_id", userId).eq("date_key", todayStr),
       supabase.from("social_accounts").select("*").eq("user_id", userId),
       supabase.from("social_days").select("*").eq("user_id", userId).gte("date_key", sevenDaysAgo),
       supabase.from("goals").select("*").eq("user_id", userId),
@@ -269,7 +272,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           id: t.id,
           text: t.text,
           completed: t.completed,
-          priority: t.priority
+          priority: t.priority,
+          plannedDate: t.planned_date || undefined
         })),
         notes: (dbNotes || []).filter(n => n.project_id === p.id).map(n => ({
           id: n.id,
@@ -281,7 +285,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     
     if (dbInbox) {
-      setInboxTasks(dbInbox.map(i => ({ id: i.id, text: i.text, completed: i.completed, priority: i.priority })));
+      setInboxTasks(dbInbox.map(i => ({ 
+        id: i.id, 
+        text: i.text, 
+        completed: i.completed, 
+        priority: i.priority,
+        plannedDate: i.planned_date || undefined
+      })));
     }
     
     const tb: Record<string, string> = {};
@@ -445,14 +455,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     const tempId = `task-temp-${Date.now()}`;
-    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, tasks: [...p.tasks, { id: tempId, text, completed: false, priority }] } : p));
+    const today = new Date().toISOString().split('T')[0];
+    const plannedDate = priority === "hoy" ? today : undefined;
+    
+    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, tasks: [...p.tasks, { id: tempId, text, completed: false, priority, plannedDate }] } : p));
     
     const { data } = await supabase.from("tasks").insert({
       user_id: session.user.id,
       project_id: projectId,
       text,
       completed: false,
-      priority: priority || null
+      priority: priority || null,
+      planned_date: priority === "hoy" ? today : null
     }).select().single();
     
     if (data) {
@@ -480,6 +494,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const toggleProjectTaskPriority = async (projectId: string, taskId: string) => {
     let newPriority: string | undefined = undefined;
+    const today = new Date().toISOString().split('T')[0];
+    
     setProjects(prev => prev.map(p => {
       if (p.id !== projectId) return p;
       return {
@@ -487,24 +503,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         tasks: p.tasks.map(t => {
           if (t.id === taskId) {
             newPriority = t.priority === "hoy" ? undefined : "hoy";
-            return { ...t, priority: newPriority as "hoy" | undefined };
+            return { ...t, priority: newPriority as "hoy" | undefined, plannedDate: newPriority === "hoy" ? today : undefined };
           }
           return t;
         })
       };
     }));
-    if (!taskId.includes("temp")) await supabase.from("tasks").update({ priority: newPriority || null }).eq("id", taskId);
+    if (!taskId.includes("temp")) {
+      await supabase.from("tasks").update({ 
+        priority: newPriority || null,
+        planned_date: newPriority === "hoy" ? today : null 
+      }).eq("id", taskId);
+    }
   };
 
   const setProjectTaskPriority = async (projectId: string, taskId: string, priority: "hoy" | undefined) => {
+    const today = new Date().toISOString().split('T')[0];
     setProjects(prev => prev.map(p => {
       if (p.id !== projectId) return p;
       return {
         ...p,
-        tasks: p.tasks.map(t => t.id === taskId ? { ...t, priority } : t)
+        tasks: p.tasks.map(t => t.id === taskId ? { ...t, priority, plannedDate: priority === "hoy" ? today : undefined } : t)
       };
     }));
-    if (!taskId.includes("temp")) await supabase.from("tasks").update({ priority: priority || null }).eq("id", taskId);
+    if (!taskId.includes("temp")) {
+      await supabase.from("tasks").update({ 
+        priority: priority || null,
+        planned_date: priority === "hoy" ? today : null
+      }).eq("id", taskId);
+    }
   };
 
   const addNote = async (projectId: string, noteText: string) => {
@@ -529,13 +556,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     const tempId = `inbox-temp-${Date.now()}`;
-    setInboxTasks(prev => [...prev, { id: tempId, text, priority }]);
+    const today = new Date().toISOString().split('T')[0];
+    const plannedDate = priority === "hoy" ? today : undefined;
+    
+    setInboxTasks(prev => [...prev, { id: tempId, text, priority, plannedDate }]);
     
     const { data } = await supabase.from("inbox_tasks").insert({
       user_id: session.user.id,
       text,
       completed: false,
-      priority: priority || null
+      priority: priority || null,
+      planned_date: priority === "hoy" ? today : null
     }).select().single();
     
     if (data) {
@@ -573,19 +604,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const toggleInboxTaskPriority = async (taskId: string) => {
     let newPriority: string | undefined = undefined;
+    const today = new Date().toISOString().split('T')[0];
+    
     setInboxTasks(prev => prev.map(t => {
       if (t.id === taskId) {
         newPriority = t.priority === "hoy" ? undefined : "hoy";
-        return { ...t, priority: newPriority as "hoy" | undefined };
+        return { ...t, priority: newPriority as "hoy" | undefined, plannedDate: newPriority === "hoy" ? today : undefined };
       }
       return t;
     }));
-    if (!taskId.includes("temp")) await supabase.from("inbox_tasks").update({ priority: newPriority || null }).eq("id", taskId);
+    if (!taskId.includes("temp")) {
+      await supabase.from("inbox_tasks").update({ 
+        priority: newPriority || null,
+        planned_date: newPriority === "hoy" ? today : null
+      }).eq("id", taskId);
+    }
   };
 
   const setInboxTaskPriority = async (taskId: string, priority: "hoy" | undefined) => {
-    setInboxTasks(prev => prev.map(t => t.id === taskId ? { ...t, priority } : t));
-    if (!taskId.includes("temp")) await supabase.from("inbox_tasks").update({ priority: priority || null }).eq("id", taskId);
+    const today = new Date().toISOString().split('T')[0];
+    setInboxTasks(prev => prev.map(t => t.id === taskId ? { ...t, priority, plannedDate: priority === "hoy" ? today : undefined } : t));
+    if (!taskId.includes("temp")) {
+      await supabase.from("inbox_tasks").update({ 
+        priority: priority || null,
+        planned_date: priority === "hoy" ? today : null 
+      }).eq("id", taskId);
+    }
   };
 
   const createScript = () => {
@@ -767,12 +811,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     
+    const today = new Date().toISOString().split('T')[0];
+    
     // Upsert equivalent in Supabase
-    const { data: existing } = await supabase.from("time_blocks").select("id").eq("user_id", session.user.id).eq("hour_key", time).single();
+    const { data: existing } = await supabase.from("time_blocks").select("id").eq("user_id", session.user.id).eq("date_key", today).eq("hour_key", time).single();
     if (existing) {
       await supabase.from("time_blocks").update({ text }).eq("id", existing.id);
     } else {
-      await supabase.from("time_blocks").insert({ user_id: session.user.id, hour_key: time, text });
+      await supabase.from("time_blocks").insert({ user_id: session.user.id, date_key: today, hour_key: time, text });
     }
   };
 
